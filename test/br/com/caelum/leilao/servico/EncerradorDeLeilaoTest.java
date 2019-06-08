@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,7 +82,9 @@ public class EncerradorDeLeilaoTest {
 		assertFalse(leiloesDiaAnterior.get(0).isEncerrado());
 		assertFalse(leiloesDiaAnterior.get(1).isEncerrado());
 		assertEquals(0, encerrador.getTotalEncerrados());
-
+		
+		verify(daoFalso,never()).atualiza(leiloesDiaAnterior.get(0));
+		verify(daoFalso,never()).atualiza(leiloesDiaAnterior.get(1));
 	}
 
 	@Test
@@ -96,6 +99,7 @@ public class EncerradorDeLeilaoTest {
 		encerrador.encerra();
 
 		assertEquals(0, encerrador.getTotalEncerrados());
+		
 	}
 	
 	@Test
