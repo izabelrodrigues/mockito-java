@@ -5,6 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -94,6 +96,21 @@ public class EncerradorDeLeilaoTest {
 		encerrador.encerra();
 
 		assertEquals(0, encerrador.getTotalEncerrados());
+	}
+	
+	@Test
+	public void verficaSeMetodoAtualizarFoiInvocado() {
+		RepositorioDeLeiloes daoFalso = mock(RepositorioDeLeiloes.class);
+		List<Leilao> leiloesAntigos = criaLeiloesAntigos();
+
+		when(daoFalso.correntes()).thenReturn(leiloesAntigos);
+
+		EncerradorDeLeilao encerrador = new EncerradorDeLeilao(daoFalso);
+
+		encerrador.encerra();
+		
+		verify(daoFalso, times(1)).atualiza(leiloesAntigos.get(0));
+		
 	}
 
 }

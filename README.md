@@ -7,3 +7,7 @@ Quando você invoca um método no mock que não foi previamente ensinado a responde
 * Se o método retorna um inteiro, double, ou um tipo primitivo qualquer, ele retornará 0
 * Se o método retorna uma lista, o Mockito retornará uma lista vazia
 * Se o método retorna uma outra classe qualquer, o Mockito retorna null.
+
+#### Anotação 2:
+
+* Para checar se algum método foi invocado, utilize verify. Exemplo: verficaSeMetodoAtualizarFoiInvocado() da classe EncerradorDeLeilaoTest
