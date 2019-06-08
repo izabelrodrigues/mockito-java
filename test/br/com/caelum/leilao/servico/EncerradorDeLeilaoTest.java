@@ -15,7 +15,7 @@ import org.junit.Test;
 
 import br.com.caelum.leilao.builder.CriadorDeLeilao;
 import br.com.caelum.leilao.dominio.Leilao;
-import br.com.caelum.leilao.infra.dao.LeilaoDao;
+import br.com.caelum.leilao.infra.dao.RepositorioDeLeiloes;
 
 public class EncerradorDeLeilaoTest {
 
@@ -51,7 +51,7 @@ public class EncerradorDeLeilaoTest {
 	@Test
 	public void deveEncerrarLeiloesQueComecaramHaMaisDeUmaSemanaAtras() {
 
-		LeilaoDao daoFalso = mock(LeilaoDao.class);
+		RepositorioDeLeiloes daoFalso = mock(RepositorioDeLeiloes.class);
 		List<Leilao> leiloesAntigos = criaLeiloesAntigos();
 
 		when(daoFalso.correntes()).thenReturn(leiloesAntigos);
@@ -67,7 +67,7 @@ public class EncerradorDeLeilaoTest {
 
 	@Test
 	public void naoDeveEncerrarLeiloesQueComecaramOntem() {
-		LeilaoDao daoFalso = mock(LeilaoDao.class);
+		RepositorioDeLeiloes daoFalso = mock(RepositorioDeLeiloes.class);
 		List<Leilao> leiloesDiaAnterior = criaLeiloesDiaAnterior();
 
 		when(daoFalso.correntes()).thenReturn(leiloesDiaAnterior);
@@ -75,24 +75,24 @@ public class EncerradorDeLeilaoTest {
 		EncerradorDeLeilao encerrador = new EncerradorDeLeilao(daoFalso);
 
 		encerrador.encerra();
-		
+
 		assertFalse(leiloesDiaAnterior.get(0).isEncerrado());
 		assertFalse(leiloesDiaAnterior.get(1).isEncerrado());
 		assertEquals(0, encerrador.getTotalEncerrados());
 
 	}
-	
+
 	@Test
 	public void naoDeveEncerrarListaDeLeiloesVazia() {
-		
-		LeilaoDao daoFalso = mock(LeilaoDao.class);
-		
+
+		RepositorioDeLeiloes daoFalso = mock(RepositorioDeLeiloes.class);
+
 		when(daoFalso.correntes()).thenReturn(new ArrayList<Leilao>());
-		
+
 		EncerradorDeLeilao encerrador = new EncerradorDeLeilao(daoFalso);
 
 		encerrador.encerra();
-		
+
 		assertEquals(0, encerrador.getTotalEncerrados());
 	}
 
