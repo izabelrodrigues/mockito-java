@@ -10,4 +10,5 @@ Quando você invoca um método no mock que não foi previamente ensinado a responde
 
 #### Anotação 2:
 
-* Para checar se algum método foi invocado, utilize verify. Exemplo: verficaSeMetodoAtualizarFoiInvocado() da classe EncerradorDeLeilaoTest
+* Para checar se algum método foi invocado, utilize verify. Exemplo: verficaSeMetodoAtualizarFoiInvocado() da classe EncerradorDeLeilaoTest. 
+* Se foi invocado, utilize a opção times para garantir a quantidade de vezes da invocação. Em caso de testar se não foi invocado utilize a opção never. Exemplo com never: naoDeveEncerrarLeiloesQueComecaramOntem() da classe EncerradorDeLeilaoTest. 
