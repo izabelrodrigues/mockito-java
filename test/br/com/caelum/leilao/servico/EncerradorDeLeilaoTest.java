@@ -3,12 +3,14 @@ package br.com.caelum.leilao.servico;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.any;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,8 +22,8 @@ import org.mockito.InOrder;
 
 import br.com.caelum.leilao.builder.CriadorDeLeilao;
 import br.com.caelum.leilao.dominio.Leilao;
-import br.com.caelum.leilao.infra.dao.EnviadorDeEmail;
 import br.com.caelum.leilao.infra.dao.RepositorioDeLeiloes;
+import br.com.caelum.leilao.infra.email.EnviadorDeEmail;
 
 public class EncerradorDeLeilaoTest {
 
@@ -87,10 +89,10 @@ public class EncerradorDeLeilaoTest {
 		assertFalse(leiloesDiaAnterior.get(0).isEncerrado());
 		assertFalse(leiloesDiaAnterior.get(1).isEncerrado());
 		assertEquals(0, encerrador.getTotalEncerrados());
-		
-		verify(daoFalso,never()).atualiza(leiloesDiaAnterior.get(0));
-		verify(daoFalso,never()).atualiza(leiloesDiaAnterior.get(1));
-		
+
+		verify(daoFalso, never()).atualiza(leiloesDiaAnterior.get(0));
+		verify(daoFalso, never()).atualiza(leiloesDiaAnterior.get(1));
+
 	}
 
 	@Test
@@ -99,7 +101,7 @@ public class EncerradorDeLeilaoTest {
 		RepositorioDeLeiloes daoFalso = mock(RepositorioDeLeiloes.class);
 
 		when(daoFalso.correntes()).thenReturn(new ArrayList<Leilao>());
-		
+
 		EnviadorDeEmail carteiroFalso = mock(EnviadorDeEmail.class);
 
 		EncerradorDeLeilao encerrador = new EncerradorDeLeilao(daoFalso, carteiroFalso);
@@ -107,16 +109,55 @@ public class EncerradorDeLeilaoTest {
 		encerrador.encerra();
 
 		assertEquals(0, encerrador.getTotalEncerrados());
-		
+
 	}
-	
+
 	@Test
 	public void verficaSeMetodoAtualizarFoiInvocado() {
 		RepositorioDeLeiloes daoFalso = mock(RepositorioDeLeiloes.class);
 		List<Leilao> leiloesAntigos = criaLeiloesAntigos();
 
 		when(daoFalso.correntes()).thenReturn(leiloesAntigos);
-		
+
+		EnviadorDeEmail carteiroFalso = mock(EnviadorDeEmail.class);
+
+		EncerradorDeLeilao encerrador = new EncerradorDeLeilao(daoFalso, carteiroFalso);
+
+		encerrador.encerra();
+
+		/**
+		 * Mocks a serem verificados
+		 */
+		InOrder inOrder = inOrder(daoFalso, carteiroFalso);
+
+		Leilao leilao1 = leiloesAntigos.get(0);
+		Leilao leilao2 = leiloesAntigos.get(1);
+
+		/**
+		 * Como a ordem dos mocks foi daoFalso e depois carteiroFalso, temos que fazer a
+		 * verificação nessa mesma ordem. Caso contrário, o teste falhará.
+		 */
+		inOrder.verify(daoFalso, times(1)).atualiza(leilao1);
+		inOrder.verify(carteiroFalso, times(1)).envia(leilao1);
+
+		inOrder.verify(daoFalso, times(1)).atualiza(leilao2);
+		inOrder.verify(carteiroFalso, times(1)).envia(leilao2);
+
+	}
+
+	@Test
+	public void deveContinuarAExecucaoMesmoQuandoDaoFalhaParaUmDosLeiloes() {
+
+		RepositorioDeLeiloes daoFalso = mock(RepositorioDeLeiloes.class);
+		List<Leilao> leiloesAntigos = criaLeiloesAntigos();
+
+		when(daoFalso.correntes()).thenReturn(leiloesAntigos);
+
+		Leilao leilao1 = leiloesAntigos.get(0);
+		Leilao leilao2 = leiloesAntigos.get(1);
+
+		doThrow(new RuntimeException()).when(daoFalso).atualiza(leilao1);
+
 		EnviadorDeEmail carteiroFalso = mock(EnviadorDeEmail.class);
 
 		EncerradorDeLeilao encerrador = new EncerradorDeLeilao(daoFalso, carteiroFalso);
@@ -124,19 +165,58 @@ public class EncerradorDeLeilaoTest {
 		encerrador.encerra();
 		
 		/**
-		 * Mocks a serem verificados
+		 * Foi lançado uma exceção na atualização do leilao1 mas o proximo leilão tem que atualizar normalmente
 		 */
-		InOrder inOrder = inOrder(daoFalso, carteiroFalso);
-		
+		verify(daoFalso).atualiza(leilao2);
+        verify(carteiroFalso).envia(leilao2);
+
+	}
+	
+	@Test
+	public void deveContinuarAExecucaoMesmoQuandoEnviadorDeEmailFalha() {
+
+		RepositorioDeLeiloes daoFalso = mock(RepositorioDeLeiloes.class);
+		List<Leilao> leiloesAntigos = criaLeiloesAntigos();
+
+		when(daoFalso.correntes()).thenReturn(leiloesAntigos);
+
 		Leilao leilao1 = leiloesAntigos.get(0);
+		Leilao leilao2 = leiloesAntigos.get(1);
+
+		EnviadorDeEmail carteiroFalso = mock(EnviadorDeEmail.class);
+
+		doThrow(new RuntimeException()).when(carteiroFalso).envia(leilao1);
+		EncerradorDeLeilao encerrador = new EncerradorDeLeilao(daoFalso, carteiroFalso);
+
+		encerrador.encerra();
 		
 		/**
-		 * Como a ordem dos mocks foi daoFalso e depois carteiroFalso, temos
-		 * que fazer a verificação nessa mesma ordem. Caso contrário, o teste falhará.
+		 * Foi lançado uma exceção no envio de email do leilao1 mas o próximo leilão 
+		 * tem que atualizar e enviar email normalmente
 		 */
-		inOrder.verify(daoFalso, times(1)).atualiza(leilao1);  
-		inOrder.verify(carteiroFalso, times(1)).envia(leilao1);
+		verify(daoFalso).atualiza(leilao2);
+        verify(carteiroFalso).envia(leilao2);
+
+	}
+	
+	@Test
+	public void deveContinuarAExecucaoMesmoQuandoDaoFalhaParaTodosLeiloes() {
+
+		RepositorioDeLeiloes daoFalso = mock(RepositorioDeLeiloes.class);
+		List<Leilao> leiloesAntigos = criaLeiloesAntigos();
+
+		when(daoFalso.correntes()).thenReturn(leiloesAntigos);
+
+		doThrow(new RuntimeException()).when(daoFalso).atualiza(any(Leilao.class));
 		
+		EnviadorDeEmail carteiroFalso = mock(EnviadorDeEmail.class);
+
+		EncerradorDeLeilao encerrador = new EncerradorDeLeilao(daoFalso, carteiroFalso);
+
+		encerrador.encerra();
+		
+		verify(carteiroFalso, never()).envia(any(Leilao.class));
+
 	}
 
 }

@@ -22,3 +22,11 @@ Outras opções:
 
 * Quando precisamos verificar mais de um mock em uma ordem específica podemos utilizar o InOrder.Exemplo comentado em:
 verficaSeMetodoAtualizarFoiInvocado() da classe EncerradorDeLeilaoTest.
+
+
+#### Anotação 3:
+
+* Testar lançamento de exceções: doThrow
+* Se quisermos verificar a execução de uma ação para qualquer objeto podemos utilizar o any
+
+Exemplo: doThrow(new RuntimeException()).when(daoFalso).atualiza(any(Leilao.class));
