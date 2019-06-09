@@ -30,3 +30,7 @@ verficaSeMetodoAtualizarFoiInvocado() da classe EncerradorDeLeilaoTest.
 * Se quisermos verificar a execução de uma ação para qualquer objeto podemos utilizar o any
 
 Exemplo: doThrow(new RuntimeException()).when(daoFalso).atualiza(any(Leilao.class));
+
+#### Anotação 4:
+
+* ArgumentCaptor possibilita capturar a instância que foi passada para o Mock
